@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Método de la Esquina Noroeste - Problema CPU</title>
+    <title>Método de la Esquina Noroeste</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -15,21 +15,30 @@
             margin: 0 auto;
             background-color: white;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        h1, h2 {
+        h1 {
             color: #2c3e50;
             text-align: center;
+            margin-bottom: 30px;
         }
-        .table-container {
+        .step {
             margin: 20px 0;
-            overflow-x: auto;
+            padding: 15px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+        .step h3 {
+            color: #2980b9;
+            margin-top: 0;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 10px 0;
+            margin: 15px 0;
+            background-color: white;
         }
         th, td {
             border: 2px solid #34495e;
@@ -41,411 +50,577 @@
             background-color: #3498db;
             color: white;
         }
-        .plant-header {
-            background-color: #2ecc71;
-            color: white;
+        .cost-cell {
+            background-color: #e8f4f8;
+            font-size: 12px;
+            color: #2c3e50;
+        }
+        .allocation-cell {
+            background-color: #d5e8d4;
+            font-size: 16px;
+            color: #27ae60;
         }
         .supply-demand {
             background-color: #f39c12;
             color: white;
         }
-        .cost-cell {
-            background-color: #ecf0f1;
-            font-size: 12px;
-        }
-        .allocation-cell {
-            background-color: #e8f5e8;
-            color: #27ae60;
-            font-size: 14px;
-            font-weight: bold;
-        }
-        .step {
+        .explanation {
             background-color: #fff3cd;
             border: 1px solid #ffeaa7;
             padding: 15px;
-            margin: 10px 0;
             border-radius: 5px;
+            margin: 10px 0;
         }
         .final-result {
             background-color: #d4edda;
             border: 1px solid #c3e6cb;
-            padding: 15px;
-            margin: 20px 0;
+            padding: 20px;
             border-radius: 5px;
-        }
-        .solution-table {
-            background-color: #f8f9fa;
-        }
-        .highlight {
-            background-color: #ffeb3b !important;
-            animation: pulse 1s infinite;
-        }
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
+            margin: 20px 0;
         }
         .calculation {
-            font-style: italic;
-            color: #666;
+            font-family: monospace;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
             margin: 5px 0;
         }
-        .button {
-            background-color: #3498db;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 5px;
+        .current-step {
+            background-color: #ffebee;
+            border-left: 4px solid #e74c3c;
         }
-        .button:hover {
-            background-color: #2980b9;
-        }
-        .teaching-note {
-            background-color: #e3f2fd;
-            border-left: 4px solid #2196f3;
-            padding: 10px 15px;
-            margin: 10px 0;
-            border-radius: 0 5px 5px 0;
+        .completed-step {
+            background-color: #e8f5e8;
+            border-left: 4px solid #27ae60;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>PROBLEMA DE TRANSPORTE - MÉTODO DE LA ESQUINA NOROESTE</h1>
-        <h2>Empresa de Fabricación de CPUs</h2>
+        <h1>🚚 Método de la Esquina Noroeste - Problema de Transporte</h1>
         
-        <div class="teaching-note">
-            <h3>🎓 ¿Qué es el Método de la Esquina Noroeste?</h3>
-            <p>El método de la esquina noroeste es una técnica sistemática para encontrar una solución inicial factible en problemas de transporte. Su nombre proviene del hecho de que comenzamos en la celda superior izquierda (esquina noroeste) de la tabla de costos y nos movemos secuencialmente hacia la derecha y hacia abajo, asignando la máxima cantidad posible en cada paso.</p>
-        </div>
-        
-        <div class="step">
-            <h3>📋 Datos del Problema</h3>
-            <p><strong>Plantas de Fabricación:</strong> Santa Bárbara, Columbus, New York</p>
-            <p><strong>Almacenes de Distribución:</strong> Pittsburgh, Mobile, Denver, Los Ángeles, Washington</p>
-            <p><strong>Objetivo:</strong> Minimizar el costo total de transporte de CPUs</p>
+        <div class="explanation">
+            <h3>📋 Datos del Problema:</h3>
+            <p><strong>Plantas:</strong> Santa Barbara (9000 CPU), Columbus (4000 CPU), Nueva York (8000 CPU)</p>
+            <p><strong>Almacenes:</strong> Pittsburgh (3000), Mobile (5000), Denver (4000), Los Angeles (6000), Washington (3000)</p>
+            <p><strong>Total Oferta:</strong> 21000 CPU | <strong>Total Demanda:</strong> 21000 CPU ✅ (Problema Balanceado)</p>
         </div>
 
-        <div class="table-container">
-            <h3>Tabla de Costos y Capacidades Iniciales</h3>
-            <table id="initialTable">
-                <thead>
-                    <tr>
-                        <th>PLANTA</th>
-                        <th>Pittsburgh</th>
-                        <th>Mobile</th>
-                        <th>Denver</th>
-                        <th>Los Ángeles</th>
-                        <th>Washington</th>
-                        <th>CPU DISPONIBLES</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="plant-header">Sta. Bárbara</td>
-                        <td class="cost-cell">$10</td>
-                        <td class="cost-cell">$20</td>
-                        <td class="cost-cell">$5</td>
-                        <td class="cost-cell">$9</td>
-                        <td class="cost-cell">$10</td>
-                        <td class="supply-demand">9000</td>
-                    </tr>
-                    <tr>
-                        <td class="plant-header">Columbus</td>
-                        <td class="cost-cell">$2</td>
-                        <td class="cost-cell">$10</td>
-                        <td class="cost-cell">$8</td>
-                        <td class="cost-cell">$30</td>
-                        <td class="cost-cell">$6</td>
-                        <td class="supply-demand">4000</td>
-                    </tr>
-                    <tr>
-                        <td class="plant-header">New York</td>
-                        <td class="cost-cell">$1</td>
-                        <td class="cost-cell">$20</td>
-                        <td class="cost-cell">$7</td>
-                        <td class="cost-cell">$10</td>
-                        <td class="cost-cell">$4</td>
-                        <td class="supply-demand">8000</td>
-                    </tr>
-                    <tr>
-                        <td class="supply-demand">CPU REQUERIDOS</td>
-                        <td class="supply-demand">3000</td>
-                        <td class="supply-demand">5000</td>
-                        <td class="supply-demand">4000</td>
-                        <td class="supply-demand">6000</td>
-                        <td class="supply-demand">3000</td>
-                        <td class="supply-demand">21000</td>
-                    </tr>
-                </tbody>
+        <div class="step">
+            <h3>📊 Tabla Inicial con Costos de Transporte</h3>
+            <table>
+                <tr>
+                    <th rowspan="2">PLANTAS</th>
+                    <th colspan="5">ALMACENES</th>
+                    <th rowspan="2">OFERTA</th>
+                </tr>
+                <tr>
+                    <th>Pittsburgh</th>
+                    <th>Mobile</th>
+                    <th>Denver</th>
+                    <th>Los Angeles</th>
+                    <th>Washington</th>
+                </tr>
+                <tr>
+                    <th>Santa Barbara</th>
+                    <td class="cost-cell">$10</td>
+                    <td class="cost-cell">$20</td>
+                    <td class="cost-cell">$5</td>
+                    <td class="cost-cell">$9</td>
+                    <td class="cost-cell">$10</td>
+                    <td class="supply-demand">9000</td>
+                </tr>
+                <tr>
+                    <th>Columbus</th>
+                    <td class="cost-cell">$2</td>
+                    <td class="cost-cell">$10</td>
+                    <td class="cost-cell">$8</td>
+                    <td class="cost-cell">$30</td>
+                    <td class="cost-cell">$6</td>
+                    <td class="supply-demand">4000</td>
+                </tr>
+                <tr>
+                    <th>Nueva York</th>
+                    <td class="cost-cell">$1</td>
+                    <td class="cost-cell">$20</td>
+                    <td class="cost-cell">$7</td>
+                    <td class="cost-cell">$10</td>
+                    <td class="cost-cell">$4</td>
+                    <td class="supply-demand">8000</td>
+                </tr>
+                <tr>
+                    <th class="supply-demand">DEMANDA</th>
+                    <td class="supply-demand">3000</td>
+                    <td class="supply-demand">5000</td>
+                    <td class="supply-demand">4000</td>
+                    <td class="supply-demand">6000</td>
+                    <td class="supply-demand">3000</td>
+                    <td class="supply-demand">21000</td>
+                </tr>
             </table>
         </div>
 
-        <div class="step">
-            <h3>🔍 Verificación de Balance</h3>
+        <div class="step current-step">
+            <h3>🔄 Paso 1: Asignación en Esquina Noroeste (Santa Barbara → Pittsburgh)</h3>
             <div class="calculation">
-                <p><strong>Oferta Total:</strong> 9000 + 4000 + 8000 = 21000 unidades</p>
-                <p><strong>Demanda Total:</strong> 3000 + 5000 + 4000 + 6000 + 3000 = 21000 unidades</p>
-                <p><strong>✅ El problema está balanceado</strong> (Oferta = Demanda)</p>
+                Oferta Santa Barbara: 9000 CPU<br>
+                Demanda Pittsburgh: 3000 CPU<br>
+                Asignación: min(9000, 3000) = 3000 CPU<br>
+                Costo: 3000 × $10 = $30,000
             </div>
-            <div class="teaching-note">
-                <p><strong>💡 Concepto Clave:</strong> Un problema de transporte está balanceado cuando la suma total de ofertas es igual a la suma total de demandas. Esto garantiza que podemos satisfacer todas las demandas exactamente con las ofertas disponibles, sin excedentes ni faltantes.</p>
-            </div>
-        </div>
-
-        <div class="step">
-            <h3>🎯 Aplicación del Método de la Esquina Noroeste</h3>
-            <p>Comenzamos en la celda superior izquierda (Sta. Bárbara → Pittsburgh) y asignamos el mínimo entre oferta disponible y demanda requerida. Luego nos movemos sistemáticamente.</p>
-            
-            <button class="button" onclick="showStep(1)">Paso 1</button>
-            <button class="button" onclick="showStep(2)">Paso 2</button>
-            <button class="button" onclick="showStep(3)">Paso 3</button>
-            <button class="button" onclick="showStep(4)">Paso 4</button>
-            <button class="button" onclick="showStep(5)">Paso 5</button>
-            <button class="button" onclick="showStep(6)">Paso 6</button>
-            <button class="button" onclick="showStep(7)">Paso 7</button>
-            <button class="button" onclick="showFinalSolution()">Solución Final</button>
-        </div>
-
-        <div id="stepDetails"></div>
-
-        <div class="table-container">
-            <h3>Tabla de Solución con Asignaciones</h3>
-            <table id="solutionTable" class="solution-table">
-                <thead>
-                    <tr>
-                        <th>PLANTA</th>
-                        <th>Pittsburgh</th>
-                        <th>Mobile</th>
-                        <th>Denver</th>
-                        <th>Los Ángeles</th>
-                        <th>Washington</th>
-                        <th>CPU DISPONIBLES</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="plant-header">Sta. Bárbara</td>
-                        <td class="allocation-cell" id="sb-pit">3000<br><span class="cost-cell">($10)</span></td>
-                        <td class="allocation-cell" id="sb-mob">5000<br><span class="cost-cell">($20)</span></td>
-                        <td class="allocation-cell" id="sb-den">1000<br><span class="cost-cell">($5)</span></td>
-                        <td class="cost-cell" id="sb-la">0<br>($9)</td>
-                        <td class="cost-cell" id="sb-was">0<br>($10)</td>
-                        <td class="supply-demand">9000</td>
-                    </tr>
-                    <tr>
-                        <td class="plant-header">Columbus</td>
-                        <td class="cost-cell" id="col-pit">0<br>($2)</td>
-                        <td class="cost-cell" id="col-mob">0<br>($10)</td>
-                        <td class="allocation-cell" id="col-den">3000<br><span class="cost-cell">($8)</span></td>
-                        <td class="allocation-cell" id="col-la">1000<br><span class="cost-cell">($30)</span></td>
-                        <td class="cost-cell" id="col-was">0<br>($6)</td>
-                        <td class="supply-demand">4000</td>
-                    </tr>
-                    <tr>
-                        <td class="plant-header">New York</td>
-                        <td class="cost-cell" id="ny-pit">0<br>($1)</td>
-                        <td class="cost-cell" id="ny-mob">0<br>($20)</td>
-                        <td class="cost-cell" id="ny-den">0<br>($7)</td>
-                        <td class="allocation-cell" id="ny-la">5000<br><span class="cost-cell">($10)</span></td>
-                        <td class="allocation-cell" id="ny-was">3000<br><span class="cost-cell">($4)</span></td>
-                        <td class="supply-demand">8000</td>
-                    </tr>
-                    <tr>
-                        <td class="supply-demand">CPU REQUERIDOS</td>
-                        <td class="supply-demand">3000</td>
-                        <td class="supply-demand">5000</td>
-                        <td class="supply-demand">4000</td>
-                        <td class="supply-demand">6000</td>
-                        <td class="supply-demand">3000</td>
-                        <td class="supply-demand">21000</td>
-                    </tr>
-                </tbody>
+            <table>
+                <tr>
+                    <th rowspan="2">PLANTAS</th>
+                    <th colspan="5">ALMACENES</th>
+                    <th rowspan="2">OFERTA RESTANTE</th>
+                </tr>
+                <tr>
+                    <th>Pittsburgh</th>
+                    <th>Mobile</th>
+                    <th>Denver</th>
+                    <th>Los Angeles</th>
+                    <th>Washington</th>
+                </tr>
+                <tr>
+                    <th>Santa Barbara</th>
+                    <td class="allocation-cell">3000<br><small>$10</small></td>
+                    <td class="cost-cell">$20</td>
+                    <td class="cost-cell">$5</td>
+                    <td class="cost-cell">$9</td>
+                    <td class="cost-cell">$10</td>
+                    <td class="supply-demand">6000</td>
+                </tr>
+                <tr>
+                    <th>Columbus</th>
+                    <td class="cost-cell">$2</td>
+                    <td class="cost-cell">$10</td>
+                    <td class="cost-cell">$8</td>
+                    <td class="cost-cell">$30</td>
+                    <td class="cost-cell">$6</td>
+                    <td class="supply-demand">4000</td>
+                </tr>
+                <tr>
+                    <th>Nueva York</th>
+                    <td class="cost-cell">$1</td>
+                    <td class="cost-cell">$20</td>
+                    <td class="cost-cell">$7</td>
+                    <td class="cost-cell">$10</td>
+                    <td class="cost-cell">$4</td>
+                    <td class="supply-demand">8000</td>
+                </tr>
+                <tr>
+                    <th class="supply-demand">DEMANDA RESTANTE</th>
+                    <td class="supply-demand">0</td>
+                    <td class="supply-demand">5000</td>
+                    <td class="supply-demand">4000</td>
+                    <td class="supply-demand">6000</td>
+                    <td class="supply-demand">3000</td>
+                    <td class="supply-demand">18000</td>
+                </tr>
             </table>
+            <p><strong>Resultado:</strong> Pittsburgh satisfecho completamente. Santa Barbara tiene 6000 CPU restantes.</p>
+        </div>
+
+        <div class="step current-step">
+            <h3>🔄 Paso 2: Siguiente Asignación (Santa Barbara → Mobile)</h3>
+            <div class="calculation">
+                Oferta restante Santa Barbara: 6000 CPU<br>
+                Demanda Mobile: 5000 CPU<br>
+                Asignación: min(6000, 5000) = 5000 CPU<br>
+                Costo: 5000 × $20 = $100,000
+            </div>
+            <table>
+                <tr>
+                    <th rowspan="2">PLANTAS</th>
+                    <th colspan="5">ALMACENES</th>
+                    <th rowspan="2">OFERTA RESTANTE</th>
+                </tr>
+                <tr>
+                    <th>Pittsburgh</th>
+                    <th>Mobile</th>
+                    <th>Denver</th>
+                    <th>Los Angeles</th>
+                    <th>Washington</th>
+                </tr>
+                <tr>
+                    <th>Santa Barbara</th>
+                    <td class="allocation-cell">3000<br><small>$10</small></td>
+                    <td class="allocation-cell">5000<br><small>$20</small></td>
+                    <td class="cost-cell">$5</td>
+                    <td class="cost-cell">$9</td>
+                    <td class="cost-cell">$10</td>
+                    <td class="supply-demand">1000</td>
+                </tr>
+                <tr>
+                    <th>Columbus</th>
+                    <td class="cost-cell">$2</td>
+                    <td class="cost-cell">$10</td>
+                    <td class="cost-cell">$8</td>
+                    <td class="cost-cell">$30</td>
+                    <td class="cost-cell">$6</td>
+                    <td class="supply-demand">4000</td>
+                </tr>
+                <tr>
+                    <th>Nueva York</th>
+                    <td class="cost-cell">$1</td>
+                    <td class="cost-cell">$20</td>
+                    <td class="cost-cell">$7</td>
+                    <td class="cost-cell">$10</td>
+                    <td class="cost-cell">$4</td>
+                    <td class="supply-demand">8000</td>
+                </tr>
+                <tr>
+                    <th class="supply-demand">DEMANDA RESTANTE</th>
+                    <td class="supply-demand">0</td>
+                    <td class="supply-demand">0</td>
+                    <td class="supply-demand">4000</td>
+                    <td class="supply-demand">6000</td>
+                    <td class="supply-demand">3000</td>
+                    <td class="supply-demand">13000</td>
+                </tr>
+            </table>
+            <p><strong>Resultado:</strong> Mobile satisfecho completamente. Santa Barbara tiene 1000 CPU restantes.</p>
+        </div>
+
+        <div class="step current-step">
+            <h3>🔄 Paso 3: Continuar con Santa Barbara → Denver</h3>
+            <div class="calculation">
+                Oferta restante Santa Barbara: 1000 CPU<br>
+                Demanda Denver: 4000 CPU<br>
+                Asignación: min(1000, 4000) = 1000 CPU<br>
+                Costo: 1000 × $5 = $5,000
+            </div>
+            <table>
+                <tr>
+                    <th rowspan="2">PLANTAS</th>
+                    <th colspan="5">ALMACENES</th>
+                    <th rowspan="2">OFERTA RESTANTE</th>
+                </tr>
+                <tr>
+                    <th>Pittsburgh</th>
+                    <th>Mobile</th>
+                    <th>Denver</th>
+                    <th>Los Angeles</th>
+                    <th>Washington</th>
+                </tr>
+                <tr>
+                    <th>Santa Barbara</th>
+                    <td class="allocation-cell">3000<br><small>$10</small></td>
+                    <td class="allocation-cell">5000<br><small>$20</small></td>
+                    <td class="allocation-cell">1000<br><small>$5</small></td>
+                    <td class="cost-cell">$9</td>
+                    <td class="cost-cell">$10</td>
+                    <td class="supply-demand">0</td>
+                </tr>
+                <tr>
+                    <th>Columbus</th>
+                    <td class="cost-cell">$2</td>
+                    <td class="cost-cell">$10</td>
+                    <td class="cost-cell">$8</td>
+                    <td class="cost-cell">$30</td>
+                    <td class="cost-cell">$6</td>
+                    <td class="supply-demand">4000</td>
+                </tr>
+                <tr>
+                    <th>Nueva York</th>
+                    <td class="cost-cell">$1</td>
+                    <td class="cost-cell">$20</td>
+                    <td class="cost-cell">$7</td>
+                    <td class="cost-cell">$10</td>
+                    <td class="cost-cell">$4</td>
+                    <td class="supply-demand">8000</td>
+                </tr>
+                <tr>
+                    <th class="supply-demand">DEMANDA RESTANTE</th>
+                    <td class="supply-demand">0</td>
+                    <td class="supply-demand">0</td>
+                    <td class="supply-demand">3000</td>
+                    <td class="supply-demand">6000</td>
+                    <td class="supply-demand">3000</td>
+                    <td class="supply-demand">12000</td>
+                </tr>
+            </table>
+            <p><strong>Resultado:</strong> Santa Barbara agotada completamente. Denver necesita 3000 CPU adicionales.</p>
+        </div>
+
+        <div class="step current-step">
+            <h3>🔄 Paso 4: Pasar a Columbus → Denver</h3>
+            <div class="calculation">
+                Oferta Columbus: 4000 CPU<br>
+                Demanda restante Denver: 3000 CPU<br>
+                Asignación: min(4000, 3000) = 3000 CPU<br>
+                Costo: 3000 × $8 = $24,000
+            </div>
+            <table>
+                <tr>
+                    <th rowspan="2">PLANTAS</th>
+                    <th colspan="5">ALMACENES</th>
+                    <th rowspan="2">OFERTA RESTANTE</th>
+                </tr>
+                <tr>
+                    <th>Pittsburgh</th>
+                    <th>Mobile</th>
+                    <th>Denver</th>
+                    <th>Los Angeles</th>
+                    <th>Washington</th>
+                </tr>
+                <tr>
+                    <th>Santa Barbara</th>
+                    <td class="allocation-cell">3000<br><small>$10</small></td>
+                    <td class="allocation-cell">5000<br><small>$20</small></td>
+                    <td class="allocation-cell">1000<br><small>$5</small></td>
+                    <td class="cost-cell">$9</td>
+                    <td class="cost-cell">$10</td>
+                    <td class="supply-demand">0</td>
+                </tr>
+                <tr>
+                    <th>Columbus</th>
+                    <td class="cost-cell">$2</td>
+                    <td class="cost-cell">$10</td>
+                    <td class="allocation-cell">3000<br><small>$8</small></td>
+                    <td class="cost-cell">$30</td>
+                    <td class="cost-cell">$6</td>
+                    <td class="supply-demand">1000</td>
+                </tr>
+                <tr>
+                    <th>Nueva York</th>
+                    <td class="cost-cell">$1</td>
+                    <td class="cost-cell">$20</td>
+                    <td class="cost-cell">$7</td>
+                    <td class="cost-cell">$10</td>
+                    <td class="cost-cell">$4</td>
+                    <td class="supply-demand">8000</td>
+                </tr>
+                <tr>
+                    <th class="supply-demand">DEMANDA RESTANTE</th>
+                    <td class="supply-demand">0</td>
+                    <td class="supply-demand">0</td>
+                    <td class="supply-demand">0</td>
+                    <td class="supply-demand">6000</td>
+                    <td class="supply-demand">3000</td>
+                    <td class="supply-demand">9000</td>
+                </tr>
+            </table>
+            <p><strong>Resultado:</strong> Denver satisfecho completamente. Columbus tiene 1000 CPU restantes.</p>
+        </div>
+
+        <div class="step current-step">
+            <h3>🔄 Paso 5: Columbus → Los Angeles</h3>
+            <div class="calculation">
+                Oferta restante Columbus: 1000 CPU<br>
+                Demanda Los Angeles: 6000 CPU<br>
+                Asignación: min(1000, 6000) = 1000 CPU<br>
+                Costo: 1000 × $30 = $30,000
+            </div>
+            <table>
+                <tr>
+                    <th rowspan="2">PLANTAS</th>
+                    <th colspan="5">ALMACENES</th>
+                    <th rowspan="2">OFERTA RESTANTE</th>
+                </tr>
+                <tr>
+                    <th>Pittsburgh</th>
+                    <th>Mobile</th>
+                    <th>Denver</th>
+                    <th>Los Angeles</th>
+                    <th>Washington</th>
+                </tr>
+                <tr>
+                    <th>Santa Barbara</th>
+                    <td class="allocation-cell">3000<br><small>$10</small></td>
+                    <td class="allocation-cell">5000<br><small>$20</small></td>
+                    <td class="allocation-cell">1000<br><small>$5</small></td>
+                    <td class="cost-cell">$9</td>
+                    <td class="cost-cell">$10</td>
+                    <td class="supply-demand">0</td>
+                </tr>
+                <tr>
+                    <th>Columbus</th>
+                    <td class="cost-cell">$2</td>
+                    <td class="cost-cell">$10</td>
+                    <td class="allocation-cell">3000<br><small>$8</small></td>
+                    <td class="allocation-cell">1000<br><small>$30</small></td>
+                    <td class="cost-cell">$6</td>
+                    <td class="supply-demand">0</td>
+                </tr>
+                <tr>
+                    <th>Nueva York</th>
+                    <td class="cost-cell">$1</td>
+                    <td class="cost-cell">$20</td>
+                    <td class="cost-cell">$7</td>
+                    <td class="cost-cell">$10</td>
+                    <td class="cost-cell">$4</td>
+                    <td class="supply-demand">8000</td>
+                </tr>
+                <tr>
+                    <th class="supply-demand">DEMANDA RESTANTE</th>
+                    <td class="supply-demand">0</td>
+                    <td class="supply-demand">0</td>
+                    <td class="supply-demand">0</td>
+                    <td class="supply-demand">5000</td>
+                    <td class="supply-demand">3000</td>
+                    <td class="supply-demand">8000</td>
+                </tr>
+            </table>
+            <p><strong>Resultado:</strong> Columbus agotado completamente. Los Angeles necesita 5000 CPU adicionales.</p>
+        </div>
+
+        <div class="step current-step">
+            <h3>🔄 Paso 6: Nueva York → Los Angeles</h3>
+            <div class="calculation">
+                Oferta Nueva York: 8000 CPU<br>
+                Demanda restante Los Angeles: 5000 CPU<br>
+                Asignación: min(8000, 5000) = 5000 CPU<br>
+                Costo: 5000 × $10 = $50,000
+            </div>
+            <table>
+                <tr>
+                    <th rowspan="2">PLANTAS</th>
+                    <th colspan="5">ALMACENES</th>
+                    <th rowspan="2">OFERTA RESTANTE</th>
+                </tr>
+                <tr>
+                    <th>Pittsburgh</th>
+                    <th>Mobile</th>
+                    <th>Denver</th>
+                    <th>Los Angeles</th>
+                    <th>Washington</th>
+                </tr>
+                <tr>
+                    <th>Santa Barbara</th>
+                    <td class="allocation-cell">3000<br><small>$10</small></td>
+                    <td class="allocation-cell">5000<br><small>$20</small></td>
+                    <td class="allocation-cell">1000<br><small>$5</small></td>
+                    <td class="cost-cell">$9</td>
+                    <td class="cost-cell">$10</td>
+                    <td class="supply-demand">0</td>
+                </tr>
+                <tr>
+                    <th>Columbus</th>
+                    <td class="cost-cell">$2</td>
+                    <td class="cost-cell">$10</td>
+                    <td class="allocation-cell">3000<br><small>$8</small></td>
+                    <td class="allocation-cell">1000<br><small>$30</small></td>
+                    <td class="cost-cell">$6</td>
+                    <td class="supply-demand">0</td>
+                </tr>
+                <tr>
+                    <th>Nueva York</th>
+                    <td class="cost-cell">$1</td>
+                    <td class="cost-cell">$20</td>
+                    <td class="cost-cell">$7</td>
+                    <td class="allocation-cell">5000<br><small>$10</small></td>
+                    <td class="cost-cell">$4</td>
+                    <td class="supply-demand">3000</td>
+                </tr>
+                <tr>
+                    <th class="supply-demand">DEMANDA RESTANTE</th>
+                    <td class="supply-demand">0</td>
+                    <td class="supply-demand">0</td>
+                    <td class="supply-demand">0</td>
+                    <td class="supply-demand">0</td>
+                    <td class="supply-demand">3000</td>
+                    <td class="supply-demand">3000</td>
+                </tr>
+            </table>
+            <p><strong>Resultado:</strong> Los Angeles satisfecho completamente. Nueva York tiene 3000 CPU restantes.</p>
+        </div>
+
+        <div class="step completed-step">
+            <h3>🔄 Paso 7: Asignación Final (Nueva York → Washington)</h3>
+            <div class="calculation">
+                Oferta restante Nueva York: 3000 CPU<br>
+                Demanda restante Washington: 3000 CPU<br>
+                Asignación: min(3000, 3000) = 3000 CPU<br>
+                Costo: 3000 × $4 = $12,000
+            </div>
         </div>
 
         <div class="final-result">
-            <h3>💰 Cálculo del Costo Total</h3>
+            <h3>🎯 SOLUCIÓN FINAL - MÉTODO ESQUINA NOROESTE</h3>
+            <table>
+                <tr>
+                    <th rowspan="2">PLANTAS</th>
+                    <th colspan="5">ALMACENES</th>
+                    <th rowspan="2">TOTAL ENVIADO</th>
+                </tr>
+                <tr>
+                    <th>Pittsburgh</th>
+                    <th>Mobile</th>
+                    <th>Denver</th>
+                    <th>Los Angeles</th>
+                    <th>Washington</th>
+                </tr>
+                <tr>
+                    <th>Santa Barbara</th>
+                    <td class="allocation-cell"><strong>3000</strong><br>$10</td>
+                    <td class="allocation-cell"><strong>5000</strong><br>$20</td>
+                    <td class="allocation-cell"><strong>1000</strong><br>$5</td>
+                    <td class="cost-cell">0<br>$9</td>
+                    <td class="cost-cell">0<br>$10</td>
+                    <td class="supply-demand">9000</td>
+                </tr>
+                <tr>
+                    <th>Columbus</th>
+                    <td class="cost-cell">0<br>$2</td>
+                    <td class="cost-cell">0<br>$10</td>
+                    <td class="allocation-cell"><strong>3000</strong><br>$8</td>
+                    <td class="allocation-cell"><strong>1000</strong><br>$30</td>
+                    <td class="cost-cell">0<br>$6</td>
+                    <td class="supply-demand">4000</td>
+                </tr>
+                <tr>
+                    <th>Nueva York</th>
+                    <td class="cost-cell">0<br>$1</td>
+                    <td class="cost-cell">0<br>$20</td>
+                    <td class="cost-cell">0<br>$7</td>
+                    <td class="allocation-cell"><strong>5000</strong><br>$10</td>
+                    <td class="allocation-cell"><strong>3000</strong><br>$4</td>
+                    <td class="supply-demand">8000</td>
+                </tr>
+                <tr>
+                    <th class="supply-demand">TOTAL RECIBIDO</th>
+                    <td class="supply-demand">3000</td>
+                    <td class="supply-demand">5000</td>
+                    <td class="supply-demand">4000</td>
+                    <td class="supply-demand">6000</td>
+                    <td class="supply-demand">3000</td>
+                    <td class="supply-demand">21000</td>
+                </tr>
+            </table>
+
+            <h3>💰 CÁLCULO DEL COSTO TOTAL:</h3>
             <div class="calculation">
-                <p><strong>Ruta Sta. Bárbara → Pittsburgh:</strong> 3000 × $10 = $30,000</p>
-                <p><strong>Ruta Sta. Bárbara → Mobile:</strong> 5000 × $20 = $100,000</p>
-                <p><strong>Ruta Sta. Bárbara → Denver:</strong> 1000 × $5 = $5,000</p>
-                <p><strong>Ruta Columbus → Denver:</strong> 3000 × $8 = $24,000</p>
-                <p><strong>Ruta Columbus → Los Ángeles:</strong> 1000 × $30 = $30,000</p>
-                <p><strong>Ruta New York → Los Ángeles:</strong> 5000 × $10 = $50,000</p>
-                <p><strong>Ruta New York → Washington:</strong> 3000 × $4 = $12,000</p>
-                <hr>
-                <p><strong>COSTO TOTAL DE TRANSPORTE: $251,000</strong></p>
+                Santa Barbara → Pittsburgh: 3000 × $10 = $30,000<br>
+                Santa Barbara → Mobile: 5000 × $20 = $100,000<br>
+                Santa Barbara → Denver: 1000 × $5 = $5,000<br>
+                Columbus → Denver: 3000 × $8 = $24,000<br>
+                Columbus → Los Angeles: 1000 × $30 = $30,000<br>
+                Nueva York → Los Angeles: 5000 × $10 = $50,000<br>
+                Nueva York → Washington: 3000 × $4 = $12,000<br>
+                <br>
+                <strong>COSTO TOTAL = $251,000</strong>
+            </div>
+
+            <h3>✅ VERIFICACIÓN:</h3>
+            <div class="calculation">
+                <strong>Restricciones de Oferta:</strong><br>
+                • Santa Barbara: 3000 + 5000 + 1000 = 9000 ✅<br>
+                • Columbus: 3000 + 1000 = 4000 ✅<br>
+                • Nueva York: 5000 + 3000 = 8000 ✅<br>
+                <br>
+                <strong>Restricciones de Demanda:</strong><br>
+                • Pittsburgh: 3000 = 3000 ✅<br>
+                • Mobile: 5000 = 5000 ✅<br>
+                • Denver: 1000 + 3000 = 4000 ✅<br>
+                • Los Angeles: 1000 + 5000 = 6000 ✅<br>
+                • Washington: 3000 = 3000 ✅<br>
             </div>
         </div>
 
-        <div class="step">
-            <h3>📊 Resumen de la Solución</h3>
-            <p><strong>Variables Básicas (rutas utilizadas):</strong></p>
-            <p>X₁₁ (Sta. Bárbara → Pittsburgh) = 3000 unidades</p>
-            <p>X₁₂ (Sta. Bárbara → Mobile) = 5000 unidades</p>
-            <p>X₁₃ (Sta. Bárbara → Denver) = 1000 unidades</p>
-            <p>X₂₃ (Columbus → Denver) = 3000 unidades</p>
-            <p>X₂₄ (Columbus → Los Ángeles) = 1000 unidades</p>
-            <p>X₃₄ (New York → Los Ángeles) = 5000 unidades</p>
-            <p>X₃₅ (New York → Washington) = 3000 unidades</p>
-            
-            <p><strong>Número de variables básicas:</strong> 7</p>
-            <p><strong>Número esperado:</strong> m + n - 1 = 3 + 5 - 1 = 7 ✅</p>
-            <p><strong>La solución es factible y básica.</strong></p>
-            
-            <div class="teaching-note">
-                <p><strong>💡 Interpretación:</strong> Esta solución nos dice exactamente cuántas CPUs enviar desde cada planta a cada almacén para satisfacer todas las demandas con las ofertas disponibles. El costo total de $251,000 representa el costo de implementar esta estrategia de distribución específica.</p>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function showStep(stepNumber) {
-            const stepDetails = document.getElementById('stepDetails');
-            let content = '';
-            
-            switch(stepNumber) {
-                case 1:
-                    content = `
-                        <div class="step">
-                            <h4>Paso 1: Asignación Sta. Bárbara → Pittsburgh</h4>
-                            <p><strong>Celda actual:</strong> (1,1) - Sta. Bárbara → Pittsburgh</p>
-                            <p><strong>Oferta disponible:</strong> 9000 unidades</p>
-                            <p><strong>Demanda requerida:</strong> 3000 unidades</p>
-                            <p><strong>Asignación:</strong> min(9000, 3000) = 3000 unidades</p>
-                            <p><strong>Resultado:</strong> Demanda de Pittsburgh satisfecha completamente</p>
-                            <p><strong>Oferta restante Sta. Bárbara:</strong> 9000 - 3000 = 6000 unidades</p>
-                            <p><strong>Siguiente movimiento:</strong> Derecha → Mobile</p>
-                            <div class="teaching-note">
-                                <p><strong>🔍 Análisis:</strong> Como la demanda (3000) es menor que la oferta (9000), asignamos toda la demanda y la columna de Pittsburgh queda completamente satisfecha. Continuamos en la misma fila.</p>
-                            </div>
-                        </div>
-                    `;
-                    break;
-                case 2:
-                    content = `
-                        <div class="step">
-                            <h4>Paso 2: Asignación Sta. Bárbara → Mobile</h4>
-                            <p><strong>Celda actual:</strong> (1,2) - Sta. Bárbara → Mobile</p>
-                            <p><strong>Oferta disponible:</strong> 6000 unidades</p>
-                            <p><strong>Demanda requerida:</strong> 5000 unidades</p>
-                            <p><strong>Asignación:</strong> min(6000, 5000) = 5000 unidades</p>
-                            <p><strong>Resultado:</strong> Demanda de Mobile satisfecha completamente</p>
-                            <p><strong>Oferta restante Sta. Bárbara:</strong> 6000 - 5000 = 1000 unidades</p>
-                            <p><strong>Siguiente movimiento:</strong> Derecha → Denver</p>
-                        </div>
-                    `;
-                    break;
-                case 3:
-                    content = `
-                        <div class="step">
-                            <h4>Paso 3: Asignación Sta. Bárbara → Denver</h4>
-                            <p><strong>Celda actual:</strong> (1,3) - Sta. Bárbara → Denver</p>
-                            <p><strong>Oferta disponible:</strong> 1000 unidades</p>
-                            <p><strong>Demanda requerida:</strong> 4000 unidades</p>
-                            <p><strong>Asignación:</strong> min(1000, 4000) = 1000 unidades</p>
-                            <p><strong>Resultado:</strong> Oferta de Sta. Bárbara agotada completamente</p>
-                            <p><strong>Demanda restante Denver:</strong> 4000 - 1000 = 3000 unidades</p>
-                            <p><strong>Siguiente movimiento:</strong> Abajo → Columbus</p>
-                            <div class="teaching-note">
-                                <p><strong>🔍 Análisis:</strong> Aquí la oferta (1000) es menor que la demanda (4000), por lo que asignamos toda la oferta restante y la fila de Sta. Bárbara queda completamente agotada. Continuamos en la misma columna.</p>
-                            </div>
-                        </div>
-                    `;
-                    break;
-                case 4:
-                    content = `
-                        <div class="step">
-                            <h4>Paso 4: Asignación Columbus → Denver</h4>
-                            <p><strong>Celda actual:</strong> (2,3) - Columbus → Denver</p>
-                            <p><strong>Oferta disponible:</strong> 4000 unidades</p>
-                            <p><strong>Demanda requerida:</strong> 3000 unidades (restante)</p>
-                            <p><strong>Asignación:</strong> min(4000, 3000) = 3000 unidades</p>
-                            <p><strong>Resultado:</strong> Demanda de Denver satisfecha completamente</p>
-                            <p><strong>Oferta restante Columbus:</strong> 4000 - 3000 = 1000 unidades</p>
-                            <p><strong>Siguiente movimiento:</strong> Derecha → Los Ángeles</p>
-                        </div>
-                    `;
-                    break;
-                case 5:
-                    content = `
-                        <div class="step">
-                            <h4>Paso 5: Asignación Columbus → Los Ángeles</h4>
-                            <p><strong>Celda actual:</strong> (2,4) - Columbus → Los Ángeles</p>
-                            <p><strong>Oferta disponible:</strong> 1000 unidades</p>
-                            <p><strong>Demanda requerida:</strong> 6000 unidades</p>
-                            <p><strong>Asignación:</strong> min(1000, 6000) = 1000 unidades</p>
-                            <p><strong>Resultado:</strong> Oferta de Columbus agotada completamente</p>
-                            <p><strong>Demanda restante Los Ángeles:</strong> 6000 - 1000 = 5000 unidades</p>
-                            <p><strong>Siguiente movimiento:</strong> Abajo → New York</p>
-                        </div>
-                    `;
-                    break;
-                case 6:
-                    content = `
-                        <div class="step">
-                            <h4>Paso 6: Asignación New York → Los Ángeles</h4>
-                            <p><strong>Celda actual:</strong> (3,4) - New York → Los Ángeles</p>
-                            <p><strong>Oferta disponible:</strong> 8000 unidades</p>
-                            <p><strong>Demanda requerida:</strong> 5000 unidades (restante)</p>
-                            <p><strong>Asignación:</strong> min(8000, 5000) = 5000 unidades</p>
-                            <p><strong>Resultado:</strong> Demanda de Los Ángeles satisfecha completamente</p>
-                            <p><strong>Oferta restante New York:</strong> 8000 - 5000 = 3000 unidades</p>
-                            <p><strong>Siguiente movimiento:</strong> Derecha → Washington</p>
-                        </div>
-                    `;
-                    break;
-                case 7:
-                    content = `
-                        <div class="step">
-                            <h4>Paso 7: Asignación Final New York → Washington</h4>
-                            <p><strong>Celda actual:</strong> (3,5) - New York → Washington</p>
-                            <p><strong>Oferta disponible:</strong> 3000 unidades</p>
-                            <p><strong>Demanda requerida:</strong> 3000 unidades</p>
-                            <p><strong>Asignación:</strong> min(3000, 3000) = 3000 unidades</p>
-                            <p><strong>Resultado:</strong> ✅ Todas las ofertas y demandas satisfechas</p>
-                            <div class="teaching-note">
-                                <p><strong>🎯 Completado:</strong> Esta última asignación agota simultáneamente la oferta restante de New York y satisface completamente la demanda de Washington. El algoritmo ha terminado exitosamente.</p>
-                            </div>
-                        </div>
-                    `;
-                    break;
-            }
-            
-            stepDetails.innerHTML = content;
-        }
-        
-        function showFinalSolution() {
-            const stepDetails = document.getElementById('stepDetails');
-            stepDetails.innerHTML = `
-                <div class="final-result">
-                    <h3>🎯 Solución Final del Método de la Esquina Noroeste</h3>
-                    <p><strong>El método de la esquina noroeste ha proporcionado una solución factible básica inicial con un costo total de $251,000.</strong></p>
-                    
-                    <div class="teaching-note">
-                        <h4>🎓 ¿Qué hemos logrado?</h4>
-                        <p>El método de la esquina noroeste nos ha dado una solución que satisface todas las restricciones del problema de transporte. Sin embargo, es importante entender que esta solución, aunque válida, no necesariamente es la óptima (la de menor costo posible).</p>
-                    </div>
-                    
-                    <h4>Características de esta solución:</h4>
-                    <p><strong>Factibilidad:</strong> ✅ Todas las restricciones de oferta y demanda se cumplen perfectamente</p>
-                    <p><strong>Basicidad:</strong> ✅ Tiene exactamente m+n-1 = 7 variables básicas (número correcto)</p>
-                    <p><strong>Optimalidad:</strong> ⚠️ No garantizada - requiere verificación adicional</p>
-                    
-                    <div class="teaching-note">
-                        <h4>🔍 ¿Por qué no es necesariamente óptima?</h4>
-                        <p>El método de la esquina noroeste se enfoca únicamente en la factibilidad, no en los costos. Asigna cantidades siguiendo un patrón sistemático (esquina noroeste), pero no considera si existen rutas más económicas. Por ejemplo, podrías notar que enviamos 1000 unidades de Columbus a Los Ángeles a $30 por unidad, cuando New York podría enviarlas a solo $10 por unidad.</p>
-                    </div>
-                    
-                    <h4>Próximos pasos recomendados:</h4>
-                    <p>Para mejorar esta solución inicial, deberías aplicar el <strong>método MODI (Multiplicadores)</strong> para verificar si es óptima y, si no lo es, mejorarla iterativamente hasta encontrar la solución de costo mínimo.</p>
-                    <p>También podrías comparar esta solución con otras obtenidas mediante el <strong>método de costo mínimo</strong> o el <strong>método de aproximación de Vogel</strong>, que suelen dar mejores soluciones iniciales.</p>
-                </div>
-            `;
-        }
-    </script>
-</body>
-</html>
+        <div class="explanation">
+            <h3>📚 CONCLUSIONES DEL MÉTODO:</h3>
+            <p><strong>Ventajas del Método de la Esquina Noroeste:</strong></p>
+            <ul>
+                <li>✅ Proceso sistemático y fácil de seguir</li>
+                <li>✅ Garantiza encontrar una

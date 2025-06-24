@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Método de la Esquina Noroeste - Problema CPU</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .table-container {
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 2px solid #34495e;
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        .plant-header {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .supply-demand {
+            background-color: #f39c12;
+            color: white;
+        }
+        .cost-cell {
+            background-color: #ecf0f1;
+            font-size: 12px;
+        }
+        .allocation-cell {
+            background-color: #e8f5e8;
+            color: #27ae60;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .step {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .final-result {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .solution-table {
+            background-color: #f8f9fa;
+        }
+        .highlight {
+            background-color: #ffeb3b !important;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        .calculation {
+            font-style: italic;
+            color: #666;
+            margin: 5px 0;
+        }
+        .button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PROBLEMA DE TRANSPORTE - MÉTODO DE LA ESQUINA NOROESTE</h1>
+        <h2>Empresa de Fabricación de CPUs</h2>
+        
+        <div class="step">
+            <h3>📋 Datos del Problema</h3>
+            <p><strong>Plantas de Fabricación:</strong> Santa Bárbara, New York</p>
+            <p><strong>Almacenes de Distribución:</strong> Pittsburgh, Mobile, Denver, Los Ángeles, Washington</p>
+            <p><strong>Objetivo:</strong> Minimizar el costo total de transporte de CPUs</p>
+        </div>
+
+        <div class="table-container">
+            <h3>Tabla de Costos y Capacidades Iniciales</h3>
+            <table id="initialTable">
+                <thead>
+                    <tr>
+                        <th>PLANTA</th>
+                        <th>Pittsburgh</th>
+                        <th>Mobile</th>
+                        <th>Denver</th>
+                        <th>Los Ángeles</th>
+                        <th>Washington</th>
+                        <th>OFERTA</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="plant-header">Sta. Bárbara</td>
+                        <td class="cost-cell">$10</td>
+                        <td class="cost-cell">$20</td>
+                        <td class="cost-cell">$5</td>
+                        <td class="cost-cell">$9</td>
+                        <td class="cost-cell">$10</td>
+                        <td class="supply-demand">9000</td>
+                    </tr>
+                    <tr>
+                        <td class="plant-header">New York</td>
+                        <td class="cost-cell">$2</td>
+                        <td class="cost-cell">$10</td>
+                        <td class="cost-cell">$8</td>
+                        <td class="cost-cell">$30</td>
+                        <td class="cost-cell">$6</td>
+                        <td class="supply-demand">12000</td>
+                    </tr>
+                    <tr>
+                        <td class="supply-demand">DEMANDA</td>
+                        <td class="supply-demand">3000</td>
+                        <td class="supply-demand">5000</td>
+                        <td class="supply-demand">4000</td>
+                        <td class="supply-demand">6000</td>
+                        <td class="supply-demand">3000</td>
+                        <td class="supply-demand">21000</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="step">
+            <h3>🔍 Verificación de Balance</h3>
+            <div class="calculation">
+                <p><strong>Oferta Total:</strong> 9000 + 12000 = 21000 unidades</p>
+                <p><strong>Demanda Total:</strong> 3000 + 5000 + 4000 + 6000 + 3000 = 21000 unidades</p>
+                <p><strong>✅ El problema está balanceado</strong> (Oferta = Demanda)</p>
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>🎯 Aplicación del Método de la Esquina Noroeste</h3>
+            <p>Comenzamos en la celda superior izquierda (Sta. Bárbara → Pittsburgh) y asignamos el mínimo entre oferta disponible y demanda requerida.</p>
+            
+            <button class="button" onclick="showStep(1)">Paso 1</button>
+            <button class="button" onclick="showStep(2)">Paso 2</button>
+            <button class="button" onclick="showStep(3)">Paso 3</button>
+            <button class="button" onclick="showStep(4)">Paso 4</button>
+            <button class="button" onclick="showStep(5)">Paso 5</button>
+            <button class="button" onclick="showFinalSolution()">Solución Final</button>
+        </div>
+
+        <div id="stepDetails"></div>
+
+        <div class="table-container">
+            <h3>Tabla de Solución con Asignaciones</h3>
+            <table id="solutionTable" class="solution-table">
+                <thead>
+                    <tr>
+                        <th>PLANTA</th>
+                        <th>Pittsburgh</th>
+                        <th>Mobile</th>
+                        <th>Denver</th>
+                        <th>Los Ángeles</th>
+                        <th>Washington</th>
+                        <th>OFERTA</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="plant-header">Sta. Bárbara</td>
+                        <td class="allocation-cell" id="sb-pit">3000<br><span class="cost-cell">($10)</span></td>
+                        <td class="allocation-cell" id="sb-mob">5000<br><span class="cost-cell">($20)</span></td>
+                        <td class="allocation-cell" id="sb-den">1000<br><span class="cost-cell">($5)</span></td>
+                        <td class="cost-cell" id="sb-la">0<br>($9)</td>
+                        <td class="cost-cell" id="sb-was">0<br>($10)</td>
+                        <td class="supply-demand">9000</td>
+                    </tr>
+                    <tr>
+                        <td class="plant-header">New York</td>
+                        <td class="cost-cell" id="ny-pit">0<br>($2)</td>
+                        <td class="cost-cell" id="ny-mob">0<br>($10)</td>
+                        <td class="allocation-cell" id="ny-den">3000<br><span class="cost-cell">($8)</span></td>
+                        <td class="allocation-cell" id="ny-la">6000<br><span class="cost-cell">($30)</span></td>
+                        <td class="allocation-cell" id="ny-was">3000<br><span class="cost-cell">($6)</span></td>
+                        <td class="supply-demand">12000</td>
+                    </tr>
+                    <tr>
+                        <td class="supply-demand">DEMANDA</td>
+                        <td class="supply-demand">3000</td>
+                        <td class="supply-demand">5000</td>
+                        <td class="supply-demand">4000</td>
+                        <td class="supply-demand">6000</td>
+                        <td class="supply-demand">3000</td>
+                        <td class="supply-demand">21000</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="final-result">
+            <h3>💰 Cálculo del Costo Total</h3>
+            <div class="calculation">
+                <p><strong>Ruta Sta. Bárbara → Pittsburgh:</strong> 3000 × $10 = $30,000</p>
+                <p><strong>Ruta Sta. Bárbara → Mobile:</strong> 5000 × $20 = $100,000</p>
+                <p><strong>Ruta Sta. Bárbara → Denver:</strong> 1000 × $5 = $5,000</p>
+                <p><strong>Ruta New York → Denver:</strong> 3000 × $8 = $24,000</p>
+                <p><strong>Ruta New York → Los Ángeles:</strong> 6000 × $30 = $180,000</p>
+                <p><strong>Ruta New York → Washington:</strong> 3000 × $6 = $18,000</p>
+                <hr>
+                <p><strong>COSTO TOTAL DE TRANSPORTE: $357,000</strong></p>
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>📊 Resumen de la Solución</h3>
+            <p><strong>Variables Básicas (rutas utilizadas):</strong></p>
+            <ul>
+                <li>X₁₁ (Sta. Bárbara → Pittsburgh) = 3000 unidades</li>
+                <li>X₁₂ (Sta. Bárbara → Mobile) = 5000 unidades</li>
+                <li>X₁₃ (Sta. Bárbara → Denver) = 1000 unidades</li>
+                <li>X₂₃ (New York → Denver) = 3000 unidades</li>
+                <li>X₂₄ (New York → Los Ángeles) = 6000 unidades</li>
+                <li>X₂₅ (New York → Washington) = 3000 unidades</li>
+            </ul>
+            
+            <p><strong>Número de variables básicas:</strong> 6</p>
+            <p><strong>Número esperado:</strong> m + n - 1 = 2 + 5 - 1 = 6 ✅</p>
+            <p><strong>La solución es factible y básica.</strong></p>
+        </div>
+    </div>
+
+    <script>
+        function showStep(stepNumber) {
+            const stepDetails = document.getElementById('stepDetails');
+            let content = '';
+            
+            switch(stepNumber) {
+                case 1:
+                    content = `
+                        <div class="step">
+                            <h4>Paso 1: Asignación Sta. Bárbara → Pittsburgh</h4>
+                            <p><strong>Celda actual:</strong> (1,1) - Sta. Bárbara → Pittsburgh</p>
+                            <p><strong>Oferta disponible:</strong> 9000 unidades</p>
+                            <p><strong>Demanda requerida:</strong> 3000 unidades</p>
+                            <p><strong>Asignación:</strong> min(9000, 3000) = 3000 unidades</p>
+                            <p><strong>Resultado:</strong> Demanda de Pittsburgh satisfecha completamente</p>
+                            <p><strong>Oferta restante Sta. Bárbara:</strong> 9000 - 3000 = 6000 unidades</p>
+                            <p><strong>Siguiente movimiento:</strong> Derecha → Mobile</p>
+                        </div>
+                    `;
+                    break;
+                case 2:
+                    content = `
+                        <div class="step">
+                            <h4>Paso 2: Asignación Sta. Bárbara → Mobile</h4>
+                            <p><strong>Celda actual:</strong> (1,2) - Sta. Bárbara → Mobile</p>
+                            <p><strong>Oferta disponible:</strong> 6000 unidades</p>
+                            <p><strong>Demanda requerida:</strong> 5000 unidades</p>
+                            <p><strong>Asignación:</strong> min(6000, 5000) = 5000 unidades</p>
+                            <p><strong>Resultado:</strong> Demanda de Mobile satisfecha completamente</p>
+                            <p><strong>Oferta restante Sta. Bárbara:</strong> 6000 - 5000 = 1000 unidades</p>
+                            <p><strong>Siguiente movimiento:</strong> Derecha → Denver</p>
+                        </div>
+                    `;
+                    break;
+                case 3:
+                    content = `
+                        <div class="step">
+                            <h4>Paso 3: Asignación Sta. Bárbara → Denver</h4>
+                            <p><strong>Celda actual:</strong> (1,3) - Sta. Bárbara → Denver</p>
+                            <p><strong>Oferta disponible:</strong> 1000 unidades</p>
+                            <p><strong>Demanda requerida:</strong> 4000 unidades</p>
+                            <p><strong>Asignación:</strong> min(1000, 4000) = 1000 unidades</p>
+                            <p><strong>Resultado:</strong> Oferta de Sta. Bárbara agotada completamente</p>
+                            <p><strong>Demanda restante Denver:</strong> 4000 - 1000 = 3000 unidades</p>
+                            <p><strong>Siguiente movimiento:</strong> Abajo → New York</p>
+                        </div>
+                    `;
+                    break;
+                case 4:
+                    content = `
+                        <div class="step">
+                            <h4>Paso 4: Asignación New York → Denver</h4>
+                            <p><strong>Celda actual:</strong> (2,3) - New York → Denver</p>
+                            <p><strong>Oferta disponible:</strong> 12000 unidades</p>
+                            <p><strong>Demanda requerida:</strong> 3000 unidades</p>
+                            <p><strong>Asignación:</strong> min(12000, 3000) = 3000 unidades</p>
+                            <p><strong>Resultado:</strong> Demanda de Denver satisfecha completamente</p>
+                            <p><strong>Oferta restante New York:</strong> 12000 - 3000 = 9000 unidades</p>
+                            <p><strong>Siguiente movimiento:</strong> Derecha → Los Ángeles</p>
+                        </div>
+                    `;
+                    break;
+                case 5:
+                    content = `
+                        <div class="step">
+                            <h4>Paso 5: Asignaciones Finales</h4>
+                            <p><strong>Celda (2,4):</strong> New York → Los Ángeles</p>
+                            <p><strong>Asignación:</strong> min(9000, 6000) = 6000 unidades</p>
+                            <p><strong>Oferta restante:</strong> 9000 - 6000 = 3000 unidades</p>
+                            
+                            <p><strong>Celda (2,5):</strong> New York → Washington</p>
+                            <p><strong>Asignación:</strong> min(3000, 3000) = 3000 unidades</p>
+                            <p><strong>Resultado:</strong> Todas las ofertas y demandas satisfechas</p>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            stepDetails.innerHTML = content;
+        }
+        
+        function showFinalSolution() {
+            const stepDetails = document.getElementById('stepDetails');
+            stepDetails.innerHTML = `
+                <div class="final-result">
+                    <h3>🎯 Solución Final del Método de la Esquina Noroeste</h3>
+                    <p><strong>El método de la esquina noroeste ha proporcionado una solución factible básica inicial con un costo total de $357,000.</strong></p>
+                    
+                    <h4>Características de esta solución:</h4>
+                    <ul>
+                        <li><strong>Factibilidad:</strong> ✅ Todas las restricciones de oferta y demanda se cumplen</li>
+                        <li><strong>Basicidad:</strong> ✅ Tiene exactamente m+n-1 = 6 variables básicas</li>
+                        <li><strong>Optimalidad:</strong> ⚠️ No garantizada (requiere prueba de optimalidad)</li>
+                    </ul>
+                    
+                    <h4>Próximos pasos recomendados:</h4>
+                    <ol>
+                        <li>Aplicar el método MODI para verificar optimalidad</li>
+                        <li>Si no es óptima, mejorar la solución iterativamente</li>
+                        <li>Comparar con otras soluciones iniciales (método de costo mínimo, Vogel)</li>
+                    </ol>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
